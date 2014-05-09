@@ -35,7 +35,7 @@
 
 set(ScriptVersion 16)
 include(${CTEST_SOURCE_DIRECTORY}/CTestConfig.cmake)
-include(${CTEST_SOURCE_DIRECTORY}/cmake_modules/ci_utils.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/ci_utils.cmake)
 
 # Avoid non-ascii characters in tool output.
 set(ENV{LC_ALL} C)
