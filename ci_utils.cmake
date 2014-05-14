@@ -279,7 +279,9 @@ function(build_and_run SubProject RunAll)
     ctest_test(INCLUDE_LABEL "${SubProject}")
   endif()
 
-  ctest_coverage()
+  if(COVERAGE)
+    ctest_coverage()
+  endif()
 
   # teardown network with python script if it's Client
   if(${SubProject} STREQUAL "Client")
