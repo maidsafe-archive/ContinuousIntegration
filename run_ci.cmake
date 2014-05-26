@@ -88,6 +88,10 @@ endforeach()
 #==================================================================================================#
 set(RunAll ON)
 if(NOT DashboardModel STREQUAL "Experimental")
+#  execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CTEST_BINARY_DIRECTORY})
+  
+#  For all Windows builds, Cmake is not removing Boost directory from ctest_binary_directory, still to debug this issue, in the meantime 
+#	store boost in tmp folder by including the argument -DUSE_BOOST_CACHE=ON 
   ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
   if(BRANCH)
     set(TestBranch "${BRANCH}")
