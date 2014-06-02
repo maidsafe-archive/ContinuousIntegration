@@ -252,6 +252,7 @@ function(build_and_run SubProject RunAll)
   ctest_read_custom_files(${CMAKE_CURRENT_BINARY_DIR})
 
   # build
+  string(REGEX REPLACE "-" "" SubProject ${SubProject})
   message("Building ${SubProject}")
   set(CTEST_BUILD_TARGET "All${SubProject}")
   if(PathOfMake)
