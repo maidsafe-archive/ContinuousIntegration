@@ -33,9 +33,10 @@
 #==================================================================================================#
 
 
-set(ScriptVersion 16)
 include(${CTEST_SOURCE_DIRECTORY}/CTestConfig.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/ci_utils.cmake)
+execute_process(COMMAND ${CTEST_GIT_COMMAND} rev-list HEAD --count WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR} OUTPUT_VARIABLE ScriptVersion)
+math(EXPR ScriptVersion ${ScriptVersion}+10)
 
 # Avoid non-ascii characters in tool output.
 set(ENV{LC_ALL} C)
@@ -89,10 +90,11 @@ endforeach()
 #==================================================================================================#
 set(RunAll ON)
 if(NOT DashboardModel STREQUAL "Experimental")
-#  execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CTEST_BINARY_DIRECTORY})
-  
-#  For all Windows builds, Cmake is not removing Boost directory from ctest_binary_directory, still to debug this issue, in the meantime 
-#	store boost in tmp folder by including the argument -DUSE_BOOST_CACHE=ON 
+  # For all Windows builds, the 'ctest_empty_binary_directory' call below fails to remove the Boost
+  # directory from CTEST_BINARY_DIRECTORY if it exists (i.e. if USE_BOOST_CACHE is OFF).  Likewise
+  # 'execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory ${CTEST_BINARY_DIRECTORY})' also
+  # fails.  Still to debug this issue, but in the meantime, store boost in %temp% by doing:
+  # cmake . -DUSE_BOOST_CACHE=ON
   ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
   if(BRANCH)
     set(TestBranch "${BRANCH}")

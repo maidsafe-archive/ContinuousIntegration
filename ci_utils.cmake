@@ -231,10 +231,6 @@ endfunction()
 
 
 function(build_and_run SubProject RunAll)
-  # if(NOT ${SubProject} STREQUAL "Client")
-  #   message("Temporary skip of All${SubProject}")
-  #   return()
-  # endif()
   if(NOT ${SubProject}ShouldRun AND NOT RunAll)
     message("Not building or running tests in ${SubProject}")
     if(${SubProject} STREQUAL ${FinalSubProject})
@@ -252,9 +248,9 @@ function(build_and_run SubProject RunAll)
   ctest_read_custom_files(${CMAKE_CURRENT_BINARY_DIR})
 
   # build
-  string(REGEX REPLACE "-" "" SubProject ${SubProject})
   message("Building ${SubProject}")
   set(CTEST_BUILD_TARGET "All${SubProject}")
+  string(REGEX REPLACE "-" "" CTEST_BUILD_TARGET ${CTEST_BUILD_TARGET})
   if(PathOfMake)
     set(CTEST_BUILD_COMMAND "${PathOfMake} -k ${CTEST_BUILD_TARGET}")
   endif()
@@ -282,13 +278,6 @@ function(build_and_run SubProject RunAll)
 
   if(COVERAGE)
     ctest_coverage()
-  endif()
-
-  # teardown network with python script if it's Client
-  if(${SubProject} STREQUAL "Client")
-    execute_process(COMMAND ${CTEST_SOURCE_DIRECTORY}/tools/client_killer.py
-                    RESULT_VARIABLE TEARDOWN_RESULT
-                    WORKING_DIRECTORY ${CTEST_BINARY_DIRECTORY})
   endif()
 
   fix_xml_files_platform_entries_for_x64()
