@@ -273,7 +273,7 @@ function(build_and_run SubProject RunAll)
   if(RecurringBuildFailureCount EQUAL 0)
     # runs only tests that have a LABELS property matching "${SubProject}"
     message("Testing ${SubProject}")
-    ctest_test(INCLUDE_LABEL "${SubProject}")
+    ctest_test(INCLUDE_LABEL "${SubProject}$")
   endif()
 
   if(COVERAGE)
