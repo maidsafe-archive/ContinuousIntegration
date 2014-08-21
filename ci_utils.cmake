@@ -198,6 +198,10 @@ function(fix_xml_files_platform_entries_for_x64)
   endif()
 endfunction()
 
+function(copy_testresults_for_jenkins)
+  file(COPY ${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/Test.xml ${CTEST_BINARY_DIRECTORY}/Testing/${SubProject}Test.xml)
+endfunction()
+
 
 function(write_git_update_details_to_file)
   if(NOT DashboardModel STREQUAL "Experimental")
@@ -281,6 +285,7 @@ function(build_and_run SubProject RunAll)
   endif()
 
   fix_xml_files_platform_entries_for_x64()
+  copy_testresults_for_jenkins()
   write_git_update_details_to_file()
 
   # Rename Update-${SubProject}.xml back to Update.xml before submitting
