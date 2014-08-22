@@ -199,7 +199,8 @@ function(fix_xml_files_platform_entries_for_x64)
 endfunction()
 
 function(copy_testresults_for_jenkins)
-  file(COPY ${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/Test.xml ${CTEST_BINARY_DIRECTORY}/Testing/${SubProject}Test.xml)
+  # copy and rename test results for post-processing up in jenkins
+  file(GENERATE OUTPUT ${CTEST_BINARY_DIRECTORY}/Testing/${SubProject}Test.xml INPUT ${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/Test.xml)
 endfunction()
 
 
