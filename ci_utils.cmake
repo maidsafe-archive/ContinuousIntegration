@@ -203,7 +203,8 @@ function(copy_testresults_for_jenkins)
   message("Test results copied for Jenkins post-processing:")
   message("  source file ${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/Test.xml")
   message("  destin file ${CTEST_BINARY_DIRECTORY}/Testing/${SubProject}Test.xml")
-  file(GENERATE OUTPUT ${CTEST_BINARY_DIRECTORY}/Testing/${SubProject}Test.xml INPUT ${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/Test.xml)
+  file(COPY ${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/Test.xml DESTINATION ${CTEST_BINARY_DIRECTORY}/Testing/)
+  file(RENAME ${CTEST_BINARY_DIRECTORY}/Testing/Test.xml ${CTEST_BINARY_DIRECTORY}/Testing/${SubProject}Test.xml)
 endfunction()
 
 
