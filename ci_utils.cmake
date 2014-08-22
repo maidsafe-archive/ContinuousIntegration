@@ -200,7 +200,9 @@ endfunction()
 
 function(copy_testresults_for_jenkins)
   # copy and rename test results for post-processing up in jenkins
-  message("Test results copied for Jenkins post-processing")
+  message("Test results copied for Jenkins post-processing:")
+  message("  source file ${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/Test.xml")
+  message("  destin file ${CTEST_BINARY_DIRECTORY}/Testing/${SubProject}Test.xml")
   file(GENERATE OUTPUT ${CTEST_BINARY_DIRECTORY}/Testing/${SubProject}Test.xml INPUT ${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/Test.xml)
 endfunction()
 
