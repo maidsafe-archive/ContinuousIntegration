@@ -93,7 +93,7 @@ function(update_super_project)
   set(UpdateAttempts ${UpdateAttempts} PARENT_SCOPE)
   message("Updating super project, attempt ${UpdateAttempts} of ${MaxUpdateAttempts}")
   if(DashboardModel STREQUAL "Continuous")
-    get_git_log(CTEST_SOURCE_DIRECTORY SuperCurrentCommit SuperCurrentCommitLogMsg SuperCurrentCommitLogAuthor)
+    get_git_log(CTEST_SOURCE_DIRECTORY SuperOldCommit SuperOldCommitLogMsg SuperOldCommitLogAuthor)
     execute_process(COMMAND ${CTEST_GIT_COMMAND} pull
                     WORKING_DIRECTORY ${CTEST_SOURCE_DIRECTORY}
                     RESULT_VARIABLE ResultVar
@@ -106,8 +106,8 @@ function(update_super_project)
       return()
       #message(WARNING "Failed to pull super project:\n\n${ErrorVar}")
     endif()
-    get_git_log(CTEST_SOURCE_DIRECTORY SuperNewCommit SuperNewCommitLogMsg SuperNewCommitLogAuthor)
-    if(${SuperNewCommit} STREQUAL ${SuperCurrentCommit})
+    get_git_log(CTEST_SOURCE_DIRECTORY SuperCurrentCommit SuperCurrentCommitLogMsg SuperCurrentCommitLogAuthor)
+    if(${SuperCurrentCommit} STREQUAL ${SuperOldCommit})
       set(RunAll OFF PARENT_SCOPE)
     endif()
   elseif(DashboardModel STREQUAL "Nightly" OR DashboardModel STREQUAL "Weekly")
@@ -135,15 +135,19 @@ function(update_super_project)
     ctest_submit()
     set(UpdateSuperResult 0 PARENT_SCOPE)
   endif()
+  get_git_log(ThirdPartySourceDirectory ThirdPartyCurrentCommit ThirdPartyCurrentCommitLogMsg ThirdPartyCurrentCommitLogAuthor)
+  set(ThirdPartyCurrentCommit ${ThirdPartyCurrentCommit} PARENT_SCOPE)
+  set(ThirdPartyCurrentCommitLogMsg ${ThirdPartyCurrentCommitLogMsg} PARENT_SCOPE)
+  set(ThirdPartyCurrentCommitLogAuthor ${ThirdPartyCurrentCommitLogAuthor} PARENT_SCOPE)
 endfunction()
 
 
 macro(update_sub_project SubProject)
   math(EXPR UpdateAttempts ${UpdateAttempts}+1)
   message("Updating ${SubProject}, attempt ${UpdateAttempts} of ${MaxUpdateAttempts}")
-  ctest_update(SOURCE ${${SubProject}SourceDirectory} RETURN_VALUE UpdatedCount)
   if(DashboardModel STREQUAL "Continuous")
-    get_git_log(${SubProject}SourceDirectory ${SubProject}CurrentCommit ${SubProject}CurrentCommitLogMsg ${SubProject}CurrentCommitLogAuthor)
+    get_git_log(${SubProject}SourceDirectory ${SubProject}OldCommit ${SubProject}OldCommitLogMsg ${SubProject}OldCommitLogAuthor)
+    ctest_update(SOURCE ${${SubProject}SourceDirectory} RETURN_VALUE UpdatedCount)
     if(UpdatedCount LESS 0)
       set(UpdateResult ${UpdatedCount})
       message(WARNING "${SubProject} failed to update.  Sleeping for 30 seconds.")
@@ -171,8 +175,8 @@ macro(update_sub_project SubProject)
         endif()
       endif()
     endif()
-    get_git_log(${SubProject}SourceDirectory ${SubProject}NewCommit ${SubProject}NewCommitLogMsg ${SubProject}NewCommitLogAuthor)
   elseif(DashboardModel STREQUAL "Nightly" OR DashboardModel STREQUAL "Weekly")
+    ctest_update(SOURCE ${${SubProject}SourceDirectory} RETURN_VALUE UpdatedCount)
     set(${SubProject}ShouldRun ON)
     if(SelfGitFetchCheck)
       check_fetch_failure()
@@ -185,6 +189,7 @@ macro(update_sub_project SubProject)
       endif()
     endif()
   endif()
+  get_git_log(${SubProject}SourceDirectory ${SubProject}CurrentCommit ${SubProject}CurrentCommitLogMsg ${SubProject}CurrentCommitLogAuthor)
 endmacro()
 
 
@@ -200,18 +205,19 @@ endfunction()
 
 
 function(write_git_update_details_to_file)
-  if(NOT DashboardModel STREQUAL "Experimental")
-    execute_process(COMMAND ${CTEST_GIT_COMMAND} diff --stat ${${SubProject}CurrentCommit} ${${SubProject}NewCommit}
+  set(GitDetailsFile "${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/GitDetails.txt")
+  if(DashboardModel STREQUAL "Continuous")
+    execute_process(COMMAND ${CTEST_GIT_COMMAND} diff --stat ${${SubProject}OldCommit} ${${SubProject}CurrentCommit}
                     WORKING_DIRECTORY ${${SubProject}SourceDirectory}
                     RESULT_VARIABLE ResultVar
                     OUTPUT_VARIABLE ChangedFiles)
     if(ResultVar EQUAL 0)
-      file(WRITE "${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/GitDetails.txt" "Old Commit Details: \n${${SubProject}CurrentCommitLogMsg}
-          \nNew Commit: \n${${SubProject}NewCommitLogMsg}
-          \nFiles Changed:
-          \n${ChangedFiles}")
-      set(CTEST_NOTES_FILES "${CTEST_BINARY_DIRECTORY}/Testing/${TagId}/GitDetails.txt" PARENT_SCOPE)
+      file(WRITE "${GitDetailsFile}" "Old Commit Details:\n${${SubProject}OldCommitLogMsg}\nNew Commit Details:\n${${SubProject}CurrentCommitLogMsg}\nFiles Changed:\n${ChangedFiles}")
+      set(CTEST_NOTES_FILES "${GitDetailsFile}" PARENT_SCOPE)
     endif()
+  elseif(DashboardModel STREQUAL "Nightly" OR DashboardModel STREQUAL "Weekly")
+    file(WRITE "${GitDetailsFile}" "Latest Commit Details:\n${${SubProject}CurrentCommitLogMsg}")
+    set(CTEST_NOTES_FILES "${GitDetailsFile}" PARENT_SCOPE)
   endif()
 endfunction()
 
@@ -220,12 +226,12 @@ function(report_build_result Result)
   if(${Result} STREQUAL "false")
     message(WARNING "\n#################################### ${SubProject} failed during build ####################################\n")
   endif()
-#   execute_process(COMMAND ${CTEST_PYTHON_EXECUTABLE} ci_build_reporter.py "${MachineType}" "k${MachineBuildType}" "${Result}" "${SubProject}" "${${SubProject}NewCommitLogAuthor}"
+#   execute_process(COMMAND ${CTEST_PYTHON_EXECUTABLE} ci_build_reporter.py "${MachineType}" "k${MachineBuildType}" "${Result}" "${SubProject}" "${${SubProject}CurrentCommitLogAuthor}"
 #                   WORKING_DIRECTORY "${CTEST_SOURCE_DIRECTORY}/tools"
 #                   RESULT_VARIABLE ResultVar
 #                   OUTPUT_VARIABLE OutputVar)
 #   if(NOT ${ResultVar} EQUAL 0)
-#     message(WARNING "${SubProject} failed running \"${CTEST_PYTHON_EXECUTABLE} ci_build_reporter.py \"${MachineType}\" \"k${MachineBuildType}\" \"${Result}\" \"${SubProject}\" \"${${SubProject}NewCommitLogAuthor}\"\"\n\n${OutputVar}")
+#     message(WARNING "${SubProject} failed running \"${CTEST_PYTHON_EXECUTABLE} ci_build_reporter.py \"${MachineType}\" \"k${MachineBuildType}\" \"${Result}\" \"${SubProject}\" \"${${SubProject}CurrentCommitLogAuthor}\"\"\n\n${OutputVar}")
 #   endif()
 endfunction()
 
