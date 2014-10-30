@@ -250,7 +250,7 @@ function(build_and_run SubProject RunAll)
     set(ExtraConfigureArgs "${ExtraConfigureArgs};-DCOVERAGE=ON")
     set(CTEST_COVERAGE_COMMAND /usr/bin/gcov)
   endif()
-  ctest_configure(OPTIONS "${ExtraConfigureArgs}")
+  ctest_configure(OPTIONS "${ExtraConfigureArgs};-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER};-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}")
   ctest_read_custom_files(${CMAKE_CURRENT_BINARY_DIR})
 
   # build
