@@ -1,3 +1,10 @@
+# ***This repository is no longer maintained***
+# It has been moved to the maidsafe-archive organisation for reference only
+#
+#
+#
+#
+
 This repository is designed to be used in conjuction with the MaidSafe
 super-project at https://github.com/maidsafe/MaidSafe
 
